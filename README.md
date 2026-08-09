@@ -126,7 +126,6 @@ Architecture notes: [READMECLUTCH.md](READMECLUTCH.md).**
   - [Kill confirmed on foot](https://github.com/NotArnav03/TechQuest/releases/download/v1.0-aia/clutch-clip-1-kill-confirmed-on-foot.mp4)
   - [Kill confirmed near truck](https://github.com/NotArnav03/TechQuest/releases/download/v1.0-aia/clutch-clip-2-kill-confirmed-near-truck.mp4)
   - [Sniper scope elimination](https://github.com/NotArnav03/TechQuest/releases/download/v1.0-aia/clutch-clip-3-sniper-scope-elimination.mp4)
-- **Screen recording of the app flow:** _TODO_
 - **Screenshots:** _optional_
 
 Built and verified on an **iQOO Z11 5G (Android 16)** against **Call of Duty Mobile**.
@@ -159,7 +158,7 @@ both in the Android platform, so there's nothing extra to resolve at build time.
 - [x] README explains what the app does and how the AI works
 - [x] API key is **NOT** in the repo (`local.properties`, gitignored)
 - [x] Final code pushed to **your fork**
-- [ ] APK and/or screen recording added or linked
+- [x] APK and/or screen recording added or linked
 - [ ] **Pull Request opened** from your fork → `Reskilll/TechQuest` before the deadline
 - [ ] PR title = your **team name**
 
