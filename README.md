@@ -120,13 +120,20 @@ Architecture notes: [READMECLUTCH.md](READMECLUTCH.md).**
 - **APK:** [**clutch-aia-v1.apk**](https://github.com/NotArnav03/TechQuest/releases/download/v1.0-aia/clutch-aia-v1.apk)
   (27 MB, debug build, Android 10+) — from the
   [v1.0-aia release](https://github.com/NotArnav03/TechQuest/releases/tag/v1.0-aia)
-- **Screen recording:** _TODO — link a short video of a session on the iQOO_
+- **Sample output — clips CLUTCH cut by itself,** unedited, straight off the phone.
+  Each is ~10 s, trimmed around a moment the detector flagged and the vision model kept.
+  The filenames are the titles the model wrote:
+  - [Kill confirmed on foot](https://github.com/NotArnav03/TechQuest/releases/download/v1.0-aia/clutch-clip-1-kill-confirmed-on-foot.mp4)
+  - [Kill confirmed near truck](https://github.com/NotArnav03/TechQuest/releases/download/v1.0-aia/clutch-clip-2-kill-confirmed-near-truck.mp4)
+  - [Sniper scope elimination](https://github.com/NotArnav03/TechQuest/releases/download/v1.0-aia/clutch-clip-3-sniper-scope-elimination.mp4)
+- **Screen recording of the app flow:** _TODO_
 - **Screenshots:** _optional_
 
-Built and verified on an **iQOO Z11 5G (Android 16)** against **Call of Duty Mobile**:
-86-second session → 7 candidates detected on-device → vision review kept 3 →
-clips exported and titled *"Kill near helicopter"*, *"Double Kill on B site"*,
-*"Close-range stairway fight"*.
+Built and verified on an **iQOO Z11 5G (Android 16)** against **Call of Duty Mobile**.
+A later 86-second run detected **7 candidates on-device**, the vision review **kept 3**,
+and it named them *"Kill near helicopter"*, *"Double Kill on B site"* and
+*"Close-range stairway fight"* — picking candidates 1, 3 and 6 rather than the three
+highest-confidence ones, i.e. overriding the audio ranking on what the frames showed.
 
 ---
 
