@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive-icon foreground. The 108x108 viewport has an 18dp safe margin on every side
+  (launchers mask and parallax the outer ring), so the bolt is drawn inside the centre 72dp.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFC400"
+        android:pathData="M57,24 L30,60 L51,60 L48,84 L78,45 L57,45 Z" />
+</vector>

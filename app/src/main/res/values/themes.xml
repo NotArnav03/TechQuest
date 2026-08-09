@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Framework theme on purpose: Theme.Material3.* comes from the Material Components
+         *View* library, which this app doesn't depend on (the UI is all Compose).
+         Referencing it here would fail resource linking at build time. -->
+    <style name="Theme.Clutch" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

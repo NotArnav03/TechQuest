@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Adaptive-icon background. Dark, so the amber bolt reads on any launcher wallpaper. -->
+    <color name="ic_launcher_background">#FF12121C</color>
+</resources>
