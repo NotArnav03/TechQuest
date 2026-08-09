@@ -66,8 +66,15 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
+    // PINNED TO 2.7.0 ON PURPOSE — do not bump without also bumping the Compose BOM.
+    // Lifecycle 2.8.x moved LocalLifecycleOwner into androidx.lifecycle.compose and
+    // relies on Compose UI 1.7+ to provide it. Compose BOM 2024.05.00 ships UI 1.6.7,
+    // which only provides the old androidx.compose.ui.platform.LocalLifecycleOwner.
+    // The mismatch compiles cleanly and then crashes at runtime on the first
+    // collectAsStateWithLifecycle call:
+    //   IllegalStateException: CompositionLocal LocalLifecycleOwner not present
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation(platform("androidx.compose:compose-bom:2024.05.00"))
     implementation("androidx.compose.ui:ui")
