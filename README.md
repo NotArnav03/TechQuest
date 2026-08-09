@@ -117,9 +117,16 @@ Architecture notes: [READMECLUTCH.md](READMECLUTCH.md).**
 
 ## 📱 Demo
 
-- **APK:** _TODO — attach `app-debug.apk` or link it_
+- **APK:** [**clutch-aia-v1.apk**](https://github.com/NotArnav03/TechQuest/releases/download/v1.0-aia/clutch-aia-v1.apk)
+  (27 MB, debug build, Android 10+) — from the
+  [v1.0-aia release](https://github.com/NotArnav03/TechQuest/releases/tag/v1.0-aia)
 - **Screen recording:** _TODO — link a short video of a session on the iQOO_
 - **Screenshots:** _optional_
+
+Built and verified on an **iQOO Z11 5G (Android 16)** against **Call of Duty Mobile**:
+86-second session → 7 candidates detected on-device → vision review kept 3 →
+clips exported and titled *"Kill near helicopter"*, *"Double Kill on B site"*,
+*"Close-range stairway fight"*.
 
 ---
 
