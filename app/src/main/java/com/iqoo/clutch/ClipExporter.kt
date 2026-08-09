@@ -11,6 +11,7 @@ import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
+import org.json.JSONObject
 import java.io.File
 
 /**
@@ -80,7 +81,7 @@ class ClipExporter(private val context: Context) {
         this.onFinished = onFinished
 
         if (highlights.isEmpty()) {
-            Log.d("CLUTCH", "No highlights detected this session — nothing to export")
+            Log.w("CLUTCH", "No highlights detected this session — nothing to export")
             finish("Session ended — no highlight moments detected.")
             return
         }
@@ -119,8 +120,34 @@ class ClipExporter(private val context: Context) {
         }
 
         pruneOldClips(outputDir, sessionTag)
+        writeMetadata(outputDir, sessionTag)
         SessionState.setClips(emptyList())
         mainHandler.post { exportNext(sourceFile) }
+    }
+
+    /**
+     * Writes a sidecar JSON next to the clips holding each clip's title, timestamp and
+     * confidence, plus the session summary.
+     *
+     * Without this, all of that lives only in memory and is lost the moment the process
+     * dies — the reel then reloads as bare filenames with "at 0:00", which is precisely
+     * the state you do not want to be demoing from.
+     */
+    private fun writeMetadata(outputDir: File, sessionTag: String) {
+        runCatching {
+            val json = JSONObject()
+            json.put("__summary", SessionState.summary.value ?: "")
+            queue.forEach { pending ->
+                json.put(
+                    pending.outputFile.name,
+                    JSONObject()
+                        .put("title", titles[pending.highlight.timestampMs] ?: "")
+                        .put("atMs", pending.highlight.timestampMs)
+                        .put("confidence", pending.highlight.confidence.toDouble())
+                )
+            }
+            File(outputDir, "clutch_$sessionTag.json").writeText(json.toString())
+        }.onFailure { Log.w("CLUTCH", "Could not write clip metadata", it) }
     }
 
     /** Collapses highlights whose clip windows would overlap into a single, longer clip. */
@@ -156,8 +183,10 @@ class ClipExporter(private val context: Context) {
             .drop(SESSIONS_OF_CLIPS_TO_KEEP)
             .forEach { staleTag ->
                 bySession[staleTag]?.forEach { file ->
-                    if (file.delete()) Log.d("CLUTCH", "Pruned old clip ${file.name}")
+                    if (file.delete()) Log.w("CLUTCH", "Pruned old clip ${file.name}")
                 }
+                // take the sidecar with it, or orphaned metadata accumulates forever
+                runCatching { File(outputDir, "clutch_$staleTag.json").delete() }
             }
     }
 
@@ -186,7 +215,7 @@ class ClipExporter(private val context: Context) {
         val transformer = Transformer.Builder(context)
             .addListener(object : Transformer.Listener {
                 override fun onCompleted(composition: Composition, result: ExportResult) {
-                    Log.d("CLUTCH", "Clip exported -> ${pending.outputFile.absolutePath}")
+                    Log.w("CLUTCH", "Clip exported -> ${pending.outputFile.absolutePath}")
                     SessionState.addClip(
                         Clip(
                             file = pending.outputFile,

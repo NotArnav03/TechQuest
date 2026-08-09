@@ -113,7 +113,7 @@ class CaptureService : Service() {
      */
     private val projectionCallback = object : MediaProjection.Callback() {
         override fun onStop() {
-            Log.d("CLUTCH", "MediaProjection stopped by system/user")
+            Log.w("CLUTCH", "MediaProjection stopped by system/user")
             if (capturing) stopCapture()
         }
     }
@@ -188,7 +188,7 @@ class CaptureService : Service() {
                 .getRealMetrics(it)
         }
         val (width, height) = scaledCaptureSize(metrics.widthPixels, metrics.heightPixels)
-        Log.d("CLUTCH", "Capturing at ${width}x$height (screen ${metrics.widthPixels}x${metrics.heightPixels})")
+        Log.w("CLUTCH", "Capturing at ${width}x$height (screen ${metrics.widthPixels}x${metrics.heightPixels})")
 
         val outputFile = File(getExternalFilesDir(null), "session_${System.currentTimeMillis()}.mp4")
         lastRecordingFile = outputFile
@@ -269,7 +269,7 @@ class CaptureService : Service() {
             sampleRate = 44100,
             onLevel = { level, baseline -> SessionState.updateLevels(level, baseline) },
             onHighlight = { timestampMs, confidence ->
-                Log.d("CLUTCH", "Highlight @ ${timestampMs}ms confidence=$confidence")
+                Log.w("CLUTCH", "Highlight @ ${timestampMs}ms confidence=$confidence")
                 val highlight = Highlight(timestampMs, confidence)
                 highlights.add(highlight)
                 SessionState.addHighlight(highlight)
@@ -374,7 +374,7 @@ class CaptureService : Service() {
                     ?.associate { it.highlight.timestampMs to it.title }
                     .orEmpty()
                 SessionState.setSummary(narration?.summary)
-                Log.d(
+                Log.w(
                     "CLUTCH",
                     "Review ${if (narration == null) "skipped/failed" else "kept ${chosen.size}"}" +
                         " of ${captured.size} candidate(s)"
@@ -411,7 +411,7 @@ class CaptureService : Service() {
         recordings
             .filter { it.absolutePath != keep.absolutePath }
             .drop(SESSION_RECORDINGS_TO_KEEP - 1)
-            .forEach { if (it.delete()) Log.d("CLUTCH", "Pruned old recording ${it.name}") }
+            .forEach { if (it.delete()) Log.w("CLUTCH", "Pruned old recording ${it.name}") }
     }
 
     private fun startForegroundCompat() {

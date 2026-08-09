@@ -58,6 +58,18 @@ class HighlightDetector(
 
         /** Two highlights closer than this are the same action beat. */
         const val COOLDOWN_MS = 8_000L
+
+        /**
+         * Frames quieter than this are treated as "no audio yet" and ignored entirely.
+         *
+         * rmsToDb floors true silence to exactly 0.0 dB, while real gameplay measures
+         * 47-83 dB. AudioRecord hands back a few hundred ms of silence before the
+         * playback tap starts delivering, and letting those 0 dB frames into the
+         * baseline drags it to zero — after which every real frame looks like a +60 dB
+         * spike. Measured on an iQOO Z11 against Call of Duty Mobile: 218 consecutive
+         * samples, baseline stuck at 0.0 for every single one.
+         */
+        const val SILENCE_FLOOR_DB = 20.0
     }
 
     private val baselineWindow = ArrayDeque<Double>()
@@ -84,21 +96,39 @@ class HighlightDetector(
     fun onAudioBuffer(pcm16: ShortArray, length: Int, elapsedMs: Long) {
         if (length <= 0) return
         if (!timingCalibrated) calibrateTiming(length)
-        framesSeen++
 
         val rmsDb = rmsToDb(computeRms(pcm16, length))
-        val baselineAvg = if (baselineWindow.isEmpty()) rmsDb else baselineWindow.average()
+
+        // Near-silence: the tap hasn't started delivering yet, or the game is paused.
+        // These frames must not touch the baseline — see SILENCE_FLOOR_DB.
+        if (rmsDb < SILENCE_FLOOR_DB) {
+            consecutiveSpikeFrames = 0
+            peakDeltaThisSpike = 0.0
+            onLevel(rmsDb.toFloat(), currentBaseline(rmsDb).toFloat())
+            return
+        }
+
+        framesSeen++
+        val baselineAvg = currentBaseline(rmsDb)
         val delta = rmsDb - baselineAvg
 
         onLevel(rmsDb.toFloat(), baselineAvg.toFloat())
 
         // Throttled so a 90s session doesn't produce thousands of log lines
         if (framesSeen % 5 == 0) {
-            Log.d(
+            Log.w(
                 "CLUTCH_LEVELS",
                 "level=%.1f baseline=%.1f delta=%.1f".format(rmsDb, baselineAvg, delta)
             )
         }
+
+        // Feed the baseline on EVERY audible frame, including spiking ones. Gating this
+        // on "not currently spiking" turns a momentarily wrong baseline into a permanently
+        // wrong one — nothing can ever correct it. The window is ~3s, so a 250ms spike
+        // shifts the average by well under a dB, which is the protection the gate was
+        // reaching for anyway. Add AFTER computing delta so a frame never dilutes itself.
+        baselineWindow.addLast(rmsDb)
+        if (baselineWindow.size > baselineCapacity) baselineWindow.removeFirst()
 
         if (delta > SPIKE_THRESHOLD_DB) {
             consecutiveSpikeFrames++
@@ -106,15 +136,14 @@ class HighlightDetector(
         } else {
             consecutiveSpikeFrames = 0
             peakDeltaThisSpike = 0.0
-            // Update the rolling baseline only with non-spiking audio, so a sustained
-            // loud section doesn't drag the baseline up and mask itself.
-            baselineWindow.addLast(rmsDb)
-            if (baselineWindow.size > baselineCapacity) baselineWindow.removeFirst()
         }
 
         if (framesSeen < warmupFrames) return
 
-        if (consecutiveSpikeFrames == framesRequiredToConfirm &&
+        // >= not ==. With exact equality the counter can sail past the trigger value
+        // while warmup is still returning early, and then never equal it again for the
+        // rest of the session. The cooldown below is what prevents repeat fires.
+        if (consecutiveSpikeFrames >= framesRequiredToConfirm &&
             elapsedMs - lastHighlightAtMs > COOLDOWN_MS
         ) {
             lastHighlightAtMs = elapsedMs
@@ -124,6 +153,10 @@ class HighlightDetector(
             onHighlight(elapsedMs, confidence)
         }
     }
+
+    /** Average of recent audible frames; falls back to the current frame while empty. */
+    private fun currentBaseline(fallback: Double): Double =
+        if (baselineWindow.isEmpty()) fallback else baselineWindow.average()
 
     /** Convert the millisecond-based tuning constants into buffer counts for this device. */
     private fun calibrateTiming(bufferLength: Int) {
@@ -135,7 +168,7 @@ class HighlightDetector(
         warmupFrames = frames(WARMUP_MS)
         timingCalibrated = true
 
-        Log.d(
+        Log.w(
             "CLUTCH",
             "Detector calibrated: buffer=%.0fms confirm=%d baseline=%d warmup=%d frames"
                 .format(bufferMs, framesRequiredToConfirm, baselineCapacity, warmupFrames)

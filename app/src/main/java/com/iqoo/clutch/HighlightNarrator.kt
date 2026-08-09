@@ -106,7 +106,7 @@ class HighlightNarrator(
         recordingDurationMs: Long
     ): Narration? = withContext(Dispatchers.IO) {
         if (apiKey.isBlank()) {
-            Log.i(TAG, "No OPENROUTER_API_KEY set — using the on-device ranking only.")
+            Log.w(TAG, "No OPENROUTER_API_KEY set — using the on-device ranking only.")
             return@withContext null
         }
         if (candidates.isEmpty()) return@withContext null
@@ -304,7 +304,7 @@ class HighlightNarrator(
         }
 
         if (kept.isEmpty()) {
-            Log.i(TAG, "Model kept nothing — falling back to detector ranking")
+            Log.w(TAG, "Model kept nothing — falling back to detector ranking")
             return null
         }
 

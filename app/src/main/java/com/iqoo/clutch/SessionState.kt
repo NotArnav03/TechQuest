@@ -3,6 +3,7 @@ package com.iqoo.clutch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONObject
 import java.io.File
 
 /** One detected moment: when it fired, and how far above baseline it was. */
@@ -111,7 +112,8 @@ object SessionState {
      * older files behind, which then reappeared on the next launch.
      */
     fun clearClips() {
-        clipsDir?.listFiles { f -> f.extension == "mp4" }?.forEach { runCatching { it.delete() } }
+        clipsDir?.listFiles { f -> f.extension == "mp4" || f.extension == "json" }
+            ?.forEach { runCatching { it.delete() } }
         _clips.value.forEach { runCatching { it.file.delete() } }
         _clips.value = emptyList()
         _highlights.value = emptyList()
@@ -120,23 +122,51 @@ object SessionState {
     }
 
     /**
-     * Repopulates the clip list from disk on app launch, so a session recorded
-     * earlier (your demo backup) is still there after the app is killed.
+     * Repopulates the clip list from disk, so a session recorded earlier (your demo
+     * backup) survives the app being killed.
      *
      * Only the most recent session's clips are shown. ClipExporter keeps a couple of
      * older sessions on disk as a fallback, but surfacing all of them at once makes
      * stale clips look like they came from the run you just did.
+     *
+     * IMPORTANT — this must not clobber a populated reel. MainActivity.onCreate runs
+     * again on every Activity recreation (coming back from the game, a rotation), and
+     * the on-disk view is strictly poorer than what is already in memory. Overwriting
+     * blindly is what silently replaced titled clips with bare filenames and "at 0:00"
+     * the moment you tabbed back from a session.
      */
     fun loadClipsFromDisk(clipsDir: File) {
         this.clipsDir = clipsDir
+        if (_clips.value.isNotEmpty()) return // Activity recreation — memory wins
         if (!clipsDir.isDirectory) return
-        val newestSession = clipsDir.listFiles { f -> f.extension == "mp4" }
-            ?.groupBy { it.nameWithoutExtension.substringAfter("clutch_").substringBeforeLast("_") }
-            ?.maxByOrNull { it.key } // tags are millis, so lexical max is the latest session
-            ?.value
-            ?.sortedBy { it.name }
-            ?.map { Clip(it, sourceTimestampMs = 0L, confidence = 0f) }
-            ?: emptyList()
-        if (newestSession.isNotEmpty()) _clips.value = newestSession
+
+        val newestTag = clipsDir.listFiles { f -> f.extension == "mp4" }
+            ?.map { it.nameWithoutExtension.substringAfter("clutch_").substringBeforeLast("_") }
+            ?.maxOrNull() // tags are millis, so lexical max is the latest session
+            ?: return
+
+        val metadata = readMetadata(clipsDir, newestTag)
+        val found = clipsDir.listFiles { f ->
+            f.extension == "mp4" && f.name.startsWith("clutch_${newestTag}_")
+        }?.sortedBy { it.name }?.map { file ->
+            val entry = metadata?.optJSONObject(file.name)
+            Clip(
+                file = file,
+                sourceTimestampMs = entry?.optLong("atMs") ?: 0L,
+                confidence = (entry?.optDouble("confidence") ?: 0.0).toFloat(),
+                title = entry?.optString("title")?.takeIf { it.isNotBlank() }
+            )
+        } ?: emptyList()
+
+        if (found.isNotEmpty()) {
+            _clips.value = found
+            _summary.value = metadata?.optString("__summary")?.takeIf { it.isNotBlank() }
+        }
     }
+
+    /** Reads the sidecar ClipExporter writes, so titles survive a process restart. */
+    private fun readMetadata(clipsDir: File, sessionTag: String): JSONObject? = runCatching {
+        val file = File(clipsDir, "clutch_$sessionTag.json")
+        if (file.exists()) JSONObject(file.readText()) else null
+    }.getOrNull()
 }
