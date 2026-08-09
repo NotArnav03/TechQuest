@@ -9,3 +9,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Pulled demo footage — keep large video out of the submission repo.
+# Link the demo recording from the README rather than committing it.
+demo-clips/
+*.mp4
