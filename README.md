@@ -9,9 +9,9 @@
 
 | | |
 |---|---|
-| **Team name** | _TODO — fill in (this is also your PR title)_ |
-| **Members** | _TODO — fill in_ |
-| **City / Venue** | _TODO — Pune / Hyderabad / Bengaluru / Chennai_ |
+| **Team name** | **AIA** |
+| **Members** | Aditya Chimurkar, Ishan Gite, Arnav Gupta |
+| **City / Venue** | Pune — The Westin, Koregaon Park |
 
 ---
 
@@ -21,7 +21,7 @@
 |---|---|
 | **App name** | **CLUTCH** |
 | **Theme** | Creative tool |
-| **One-liner** | Your phone watches you game and cuts your highlight reel by itself, in real time, entirely on-device. |
+| **One-liner** | Your phone spots your best gameplay moments live as you play, then cuts and names them into a highlight reel — no editing, no manual tagging. |
 
 ### What we built
 
@@ -141,10 +141,10 @@ both in the Android platform, so there's nothing extra to resolve at build time.
 
 ## ✅ Submission checklist
 
-- [ ] Team name, members and venue filled in above
+- [x] Team name, members and venue filled in above
 - [x] README explains what the app does and how the AI works
 - [x] API key is **NOT** in the repo (`local.properties`, gitignored)
-- [ ] Final code pushed to **your fork**
+- [x] Final code pushed to **your fork**
 - [ ] APK and/or screen recording added or linked
 - [ ] **Pull Request opened** from your fork → `Reskilll/TechQuest` before the deadline
 - [ ] PR title = your **team name**
